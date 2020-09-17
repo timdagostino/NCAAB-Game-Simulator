@@ -1,285 +1,36 @@
 # R Shiny Dashboard for NCAA Simulator
-library(shiny)
+library (shiny)
 library (shinyBS)
 library (shinythemes)
 library (rvest)
+#library (plotly)
 library (dplyr)
 library (rvest)
+library (plyr)
 library (dplyr)
 library (DT)
 library (shinycssloaders)
 library (shinycustomloader)
 library (shinydashboard)
 library (profvis)
+library (ggplot2)
+library (ggthemes)
 
 
-#Insert URL ------
-URL <- 'https://www.sports-reference.com/cbb/seasons/2020-school-stats.html'
-
-#Read the HTML code from the website ------
-
-webpage <- read_html(URL)
-
-#Team Names
-team_name_html <- html_nodes(webpage, '.left')
-team_name <- html_text(team_name_html)
-noquote(team_name)
-team_name <- head(team_name, -1)
-
-#Rank
-rank_html <- html_nodes(webpage, 'th.right')
-rank <- html_text(rank_html)
-rank <- as.numeric(rank)
-
-#Overall Number of Games
-overall_games_html <- html_nodes(webpage, '.left+ .right')
-overall_games <- html_text(overall_games_html)
-overall_games <- head(overall_games, -1)
-overall_games <- as.numeric(overall_games)
-
-#Overall Wins
-overall_wins_html <- html_nodes(webpage, '.right:nth-child(4)')
-overall_wins <- html_text(overall_wins_html)
-overall_wins <- head(overall_wins, -1)
-overall_wins <- as.numeric(overall_wins)
-
-#Overall Losses
-overall_losses_html <- html_nodes(webpage, '.right:nth-child(5)')
-overall_losses <- html_text(overall_losses_html)
-overall_losses <- as.numeric(overall_losses)
-
-#Win Percentage
-wp_html <- html_nodes(webpage, '.right:nth-child(6)')
-wp <- html_text(wp_html)
-wp <- as.numeric(wp)
-
-#Simple Rating System (SRS)
-srs_html <- html_nodes(webpage, '.right:nth-child(7)')
-srs <- html_text(srs_html)
-srs <- as.numeric(srs)
-
-#Strength of Schedule
-sos_html <- html_nodes(webpage, '.right:nth-child(8)')
-sos <- html_text(sos_html)
-sos <- as.numeric(sos)
-
-#Conference Wins
-conf_wins_html <- html_nodes(webpage, '.right:nth-child(9)')
-conf_wins <- html_text(conf_wins_html)
-conf_wins <- as.numeric(conf_wins)
-
-#Conference Losses
-conf_losses_html <- html_nodes(webpage, '.right:nth-child(10)')
-conf_losses <- html_text(conf_losses_html)
-conf_losses <- as.numeric(conf_losses)
-
-#Home Wins
-home_wins_html <- html_nodes(webpage, '.right:nth-child(11)')
-home_wins <- html_text(home_wins_html)
-home_wins <- as.numeric(home_wins)
-
-#Home Losses
-home_losses_html <- html_nodes(webpage, '.right:nth-child(12)')
-home_losses <- html_text(home_losses_html)
-home_losses <- as.numeric(home_losses)
-
-#Away Wins
-away_wins_html <- html_nodes(webpage, '.right:nth-child(13)')
-away_wins <- html_text(away_wins_html)
-away_wins <- as.numeric(away_wins)
-
-#Away Losses
-away_losses_html <- html_nodes(webpage, '.right:nth-child(14)')
-away_losses <- html_text(away_losses_html)
-away_losses <- as.numeric(away_losses)
-
-#Total Points Scored (season)
-tp_html <- html_nodes(webpage, '.right:nth-child(15)')
-tp <- html_text(tp_html)
-tp <- as.numeric(tp)
-
-#Total Points Allowed (season)
-tp_allowed_html <- html_nodes(webpage, '.right:nth-child(16)')
-tp_allowed <- html_text(tp_allowed_html)
-tp_allowed <- as.numeric(tp_allowed)
-
-#Minutes Played
-mp_html <- html_nodes(webpage, '.right:nth-child(18)')
-mp <- html_text(mp_html)
-mp <- as.numeric(mp)
-
-#Field Goals
-fg_count_html <- html_nodes(webpage, '.right:nth-child(19)')
-fg_count <- html_text(fg_count_html)
-fg_count <- as.numeric(fg_count)
-
-#Field Goals Attempted
-fg_att_html <- html_nodes(webpage, '.right:nth-child(20)')
-fg_att <- html_text(fg_att_html)
-fg_att <- as.numeric(fg_att)
-
-#Field Goal Percentage
-fg_pct_html <- html_nodes(webpage, '.right:nth-child(21)')
-fg_pct <- html_text(fg_pct_html)
-fg_pct <- as.numeric(fg_pct)
-
-#Three Pointers
-three_count_html <- html_nodes(webpage, '.right:nth-child(22)')
-three_count <- html_text(three_count_html)
-three_count <- as.numeric(three_count)
-
-#Three Pointers Attempted
-three_att_html <- html_nodes(webpage, '.right:nth-child(23)')
-three_att <- html_text(three_att_html)
-three_att <- as.numeric(three_att)
-
-#Three Pointers Percentage
-three_pct_html <- html_nodes(webpage, '.right:nth-child(24)')
-three_pct <- html_text(three_pct_html)
-three_pct <- as.numeric(three_pct)
-
-#Free Throws
-ft_count_html <- html_nodes(webpage, '.right:nth-child(25)')
-ft_count <- html_text(ft_count_html)
-ft_count <- as.numeric(ft_count)
-
-#Free Throws Attempted
-ft_att_html <- html_nodes(webpage, '.right:nth-child(26)')
-ft_att <- html_text(ft_att_html)
-ft_att <- as.numeric(ft_att)
-
-#Free Throw Percentage
-ft_pct_html <- html_nodes(webpage, '.right:nth-child(27)')
-ft_pct <- html_text(ft_pct_html)
-ft_pct <- as.numeric(ft_pct)
-
-#Offensive Rebounds
-orb_html <- html_nodes(webpage, '.right:nth-child(28)')
-orb <- html_text(orb_html)
-orb <- as.numeric(orb)
-
-#Total Rebounds
-trb_html <- html_nodes(webpage, '.right:nth-child(29)')
-trb <- html_text(trb_html)
-trb <- as.numeric(trb)
-
-#Steals
-steals_html <- html_nodes(webpage, '.right:nth-child(31)')
-steals <- html_text(steals_html)
-steals <- as.numeric(steals)
-
-#Blocks
-blk_html <- html_nodes(webpage, '.right:nth-child(32)')
-blk <- html_text(blk_html)
-blk <- as.numeric(blk)
-
-#Turnovers
-tov_html <- html_nodes(webpage, '.right:nth-child(33)')
-tov <- html_text(tov_html)
-tov <- as.numeric(tov)
-
-#Personal Fouls
-pf_html <- html_nodes(webpage, '.right:nth-child(34)')
-pf <- html_text(pf_html)
-pf <- as.numeric(pf)
-
-#Advanced Team Stats ------------------------------
-
-#Insert URL
-URL <- 'https://www.sports-reference.com/cbb/seasons/2020-advanced-school-stats.html'
-
-#Read the HTML code from the website
-
-webpage_adv <- read_html(URL)
-
-#Pace of Game (An estimate of school posessions per 40 minutes)
-pace_html <- html_nodes(webpage_adv, '.right:nth-child(18)')
-pace <- html_text(pace_html)
-pace <- as.numeric(pace)
-
-#Offensive Rating (An estimate of points scored per 100 posessions)
-ortg_html <- html_nodes(webpage_adv, '.right:nth-child(19)')
-ortg <- html_text(ortg_html)
-ortg <- as.numeric(ortg)
-
-#Free Throw Attempt Rate (Number of Free  Throw Attempts per FG attempt)
-ftr_html <- html_nodes(webpage_adv, '.right:nth-child(19)')
-ftr <- html_text(ftr_html)
-ftr <- as.numeric(ftr)
-
-#True Shooting Percentage (A measure of shooting efficinecy that takes into account all shot types)
-ts_pct_html <- html_nodes(webpage_adv, '.right:nth-child(22)')
-ts_pct <- html_text(ts_pct_html)
-ts_pct <- as.numeric(ts_pct)
-
-#Total Rebound Percentage (An estimate of the percetnage of available rebounds a player grabbed while on the floor)
-trb_pct_html <- html_nodes(webpage_adv, '.right:nth-child(23)')
-trb_pct <- html_text(trb_pct_html)
-trb_pct <- as.numeric(trb_pct)
-trb_pct <- (trb_pct/100)
-
-#Steal Percentage (An estimate of the number of opponent posessions that end with a steal)
-steal_pct_html <- html_nodes(webpage_adv, '.right:nth-child(25)')
-steal_pct <- html_text(steal_pct_html)
-steal_pct <- as.numeric(steal_pct)
-steal_pct <- (steal_pct/100)
-
-#Block Percentage (An estimate of the percentage of opponent two-point FG attempts that are blocked)
-block_pct_html <- html_nodes(webpage_adv, '.right:nth-child(26)')
-block_pct <- html_text(block_pct_html)
-block_pct <- as.numeric(block_pct)
-block_pct <- (block_pct/100)
-
-#Turnover Percentage (An estimate of turnovers per 100 plays)
-tov_pct_html <- html_nodes(webpage_adv, '.right:nth-child(28)')
-tov_pct <- html_text(tov_pct_html)
-tov_pct <- as.numeric(tov_pct)
-tov_pct <- (tov_pct/100)
-
-#Offensive Rebound Percentage (An estimate of the percentage of available offensive rebounds grabbed by a player on the floor)
-orb_pct_html <- html_nodes(webpage_adv, '.right:nth-child(29)')
-orb_pct <- html_text(orb_pct_html)
-orb_pct <- as.numeric(orb_pct)
-orb_pct <- (orb_pct/100)
-
-
-#Create Dataframe
-ncaa_team_stats_2020 <- data.frame(team_name, rank, overall_games, 
-                              overall_wins, overall_losses, wp,
-                              srs, sos, conf_wins, 
-                              conf_losses, home_wins, home_losses,
-                              away_wins, away_losses, tp,
-                              tp_allowed, mp, fg_count,
-                              fg_att, fg_pct, three_count,
-                              three_att, three_pct, ft_count,
-                              ft_att, ft_pct, orb, ftr,
-                              trb, steals, blk,
-                              tov, pf, pace,
-                              ortg, ts_pct, trb_pct,
-                              steal_pct, block_pct, tov_pct,
-                              orb_pct)
-
-
-
-team_name_unique <- sort(unique(ncaa_team_stats_2020$team_name))
-
-#Establish Bins
-sos_bins <- cut(ncaa_team_stats_2020$sos, 7, include.lowest=TRUE, 
-                labels=c("Very Weak", "Weak", "Moderately Weak", "Average", "Moderately Strong", "Strong", "Very Strong"))
-
-ncaa_team_stats_2020 <- cbind(ncaa_team_stats_2020,sos_bins)
+#Data
+source("NCAA_Data_Scraper.R")
 
 
 # Define UI ----
 ui <- fluidPage(
-  theme = shinytheme("slate"),
+  #theme = shinytheme("slate"),
   pageWithSidebar(
-    headerPanel("NCAA Men's Basketball Simulator"),
+    headerPanel(title=div(img(src="ncaa.png", height = "10%", width = "10%"),"NCAA Men's Basketball Simulator")),
     sidebarPanel(
       sliderInput("num_games", "Number of Games to Simulate:",
                   min = 500, max = 10000, value = 5000, step = 500),
-      selectInput('home', 'Select Home Team', choices = team_name_unique, selected = ''),
-      selectInput('away', 'Select Away Team', choices = team_name_unique, selected = ''),
+      selectInput('home', 'Select Home Team', choices = team_name_unique, selected = 'Villanova'),
+      selectInput('away', 'Select Away Team', choices = team_name_unique, selected = 'Georgetown'),
       checkboxInput("checkbox", label = "Adjust for Home Field Advantage", value = FALSE),
       checkboxInput("checkbox2", label = "Adjust for Strength of Schedule", value = FALSE),
       actionButton("run",label = "Run Simulation"),
@@ -287,7 +38,8 @@ ui <- fluidPage(
       helpText("Select the approproate HOME and AWAY teams, then hit the Run Simulation button. The simulator uses real game data to simulate every posession for the specified number of games."),
       helpText("After clicking the Run Simulation button, please allow 60 seconds for the summary and game results to appear (Processing power is limited on the Shiny servers)"),
       br(),
-      helpText(h5("Created by Tim D'Agostino (2019)"))
+      helpText(h5("Created by Tim D'Agostino (2020)")),
+      helpText(h5("Contact: timothydagostino16@gmail.com"))
     ),
     
     mainPanel(
@@ -297,15 +49,85 @@ ui <- fluidPage(
                            
                            fluidRow(
                              
-                             box(
-                               title = "Simulation Summary",
-                               status = "primary",
-                               solidHeader = TRUE,
-                               width = 9,
-                               withLoader(tableOutput("sum"), type = "image", loader = "bounce.gif")
-                             )
-                           )
-                  ),
+                             column(12, align = 'center',
+                                    
+                                    h2(strong("Predicted Outcome")),
+                                    HTML('<hr style="color: gray;">'),
+                                    br(),
+                                    
+                                    fluidRow(
+                                      
+                                      column(1),
+                                      
+                                      column(4, 
+                                             imageOutput("away_image"),
+                                             h3(strong(textOutput("away_name"))),
+                                             HTML('<hr style="color: gray;">'),
+                                             h1(strong(textOutput("away_score"))),
+                                             h3(textOutput("away_spread"))
+                                             
+                                      ), 
+                                      column(2,
+                                             br(),
+                                             br(),
+                                             h4(strong("@"))
+                                      ),
+                                      
+                                      column(4, 
+                                             imageOutput("home_image"),
+                                             h3(strong(textOutput("home_name"))),
+                                             HTML('<hr style="color: gray;">'),
+                                             h1(strong(textOutput("home_score"))),
+                                             h3(textOutput("home_spread"))
+                                      ),
+                                      
+                                      column(1),
+                                    ),
+                                    
+                                    fluidRow(
+                                      
+                                      column(1),
+                                      
+                                      column(10,
+                                              HTML('<hr style="color: black; border: 2px solid GhostWhite; border-radius: 25px;">')
+                                              ),
+                                      
+                                      column(1)
+                                      ),
+                                    
+                                    fluidRow( 
+                                      column(1),
+                                      
+                                      column(4,
+                                             fluidRow(
+                                               br(),
+                                               h5(strong("Simulated Games - Spread Results")),
+                                               plotOutput("games_spread"))
+                                             ),
+                                             
+                                      column(2),
+                                      
+                                      column(4,
+                                             fluidRow(
+                                               br(),
+                                               #h5(strong("Team Stats Comparison")),
+                                               #plotlyOutput("team_radar"))
+                                             )
+                                             ),
+                                      
+                                      column(1)
+                                             
+                                      ),
+                        
+                                    
+                             ),
+                             
+                           ), tags$head(tags$link(rel = "stylesheet",
+                                                  type = "text/css", href = "style.css")) #css Stylesheet
+                             
+                             
+                           ),
+                  
                   
                   tabPanel("Simulated Game Results",
                            
@@ -313,18 +135,18 @@ ui <- fluidPage(
                              title = "Individual Game Results",
                              status = "primary",
                              solidHeader = TRUE,
-                             width = 9,
-                             withLoader(tableOutput('data'), type = "image", loader = "bounce.gif")
+                             DTOutput("data"),
+                             width = 9
                            )
                   ),
                   
-                  tabPanel("Vegas' Odds",
+                  tabPanel("Team Stats",
                            
-                           box(
-                             title = "Vegas' Odds",
-                             status = "primary",
-                             solidHeader = TRUE,
-                             width = 9
+                           fluidRow(
+                             
+                             column(12, 
+                             DTOutput("team_stats")
+                             )
                            )
                   )
       )
@@ -332,16 +154,59 @@ ui <- fluidPage(
       
       
     )
+    
   )
   
 )
 
-
 # Define server logic ----
 server <- function(input, output) {
   
+  #Create Table with Team Stats
+  output$team_stats <- DT::renderDT({datatable(ncaa_team_stats_2020,
+                                               style = 'bootstrap',
+                                               options = list(
+                                                 columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                 pageLength = 25,
+                                                 paging = TRUE,
+                                                 searching = TRUE,
+                                                 scrollX = TRUE,
+                                                 fixedHeader = TRUE,
+                                                 searchHighlight = TRUE,
+                                                 autoWidth = TRUE,
+                                                 ordering = TRUE,
+                                                 dom = 'tipBf'),
+                                               filter = 'top',
+                                               rownames = FALSE,
+                                               class = "display") %>%
+      formatPercentage(c("ft_pct", "ftr", "ts_pct", "trb_pct", "steal_pct", "block_pct", "tov_pct", "orb_pct"))
+  })
   
+  #Render Home Team Image
+  output$home_image <- renderImage({
+    filename <- normalizePath(file.path("www",
+                              paste0(input$home, ".png")))
+    
+    list(src = filename, height = "35%", width = "35%")
+  }, deleteFile = FALSE)
+  
+  #Render Home Team Name
+  output$home_name <- renderText({input$home})
+
+  #Render Away Team Image
+  output$away_image <- renderImage({
+    filename <- normalizePath(file.path("www",
+                              paste0(input$away, ".png")))
+    
+  #Render Away Team Name
+  output$away_name <- renderText({input$away})
+    
+    list(src = filename, height = "35%", width = "35%")
+  }, deleteFile = FALSE)
+  
+  #Begin Simulation Here
   button_push <- observeEvent(input$run, {
+
     
     progress <- shiny::Progress$new()
     on.exit(progress$close())
@@ -350,11 +215,11 @@ server <- function(input, output) {
     #Start Simulation Here --------------------------------------
     
     #Set Home Team
-    home_team <- team_stats_2020 %>%
+    home_team <- ncaa_team_stats_2020 %>%
       filter(team_name == input$home)
     
     #Set Away Team
-    away_team <- team_stats_2020 %>%
+    away_team <- ncaa_team_stats_2020 %>%
       filter(team_name == input$away)
     
     #Set Adjustment
@@ -411,7 +276,7 @@ server <- function(input, output) {
         return(new_away_stat)
       }
       
-      #Adjust Home
+      #Adjust Home Stats
       home_team$fg_pct <- home_stat_adjust(home_team$fg_pct)
       home_team$three_pct <- home_stat_adjust(home_team$three_pct)
       home_team$ts_pct <- home_stat_adjust(home_team$ts_pct)
@@ -422,7 +287,7 @@ server <- function(input, output) {
       
       home_team$tov_pct <- home_team$tov_pct - (home_team$tov_pct*home_adj)
       
-      #Adjust Away
+      #Adjust Away Stats
       away_team$fg_pct <- away_stat_adjust(away_team$fg_pct)
       away_team$three_pct <- away_stat_adjust(away_team$three_pct)
       away_team$ts_pct <- away_stat_adjust(away_team$ts_pct)
@@ -750,27 +615,110 @@ server <- function(input, output) {
     
     sim_sum <- sim_sum[-1,]
     
-    output$data <- renderTable(sim_sum)
+    games_summary <- sim_sum %>% select(Home:Spread) 
     
-    overall_sum <- colSums(sim_sum)/loop
+    #Create Table with Individual Game Stats
+    output$data <- output$sum <- DT::renderDT({datatable(games_summary,
+                                                         style = 'bootstrap',
+                                                         options = list(
+                                                           columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                                           paging = TRUE,
+                                                           searching = FALSE,
+                                                           fixedColumns = TRUE,
+                                                           autoWidth = TRUE,
+                                                           ordering = TRUE,
+                                                           dom = 'tfBp'),
+                                                         rownames = FALSE,
+                                                         class = "display") %>%
+        formatRound(c("Home", "Away", "Spread"), digits = 0)
+    })
     
-    overall_sum <- overall_sum[-1]
-    
-
-    overall_sum <- type.convert(data.frame(overall_sum))
-    
-    overall_sum$Home.Score <- round(overall_sum$Home.Score)
-    overall_sum <- t(overall_sum)
+    #Generate Plot to show Game Spread
+    output$games_spread <- renderPlot({
       
-    output$sum <- renderTable(overall_sum)
+      spread <- ggplot(sim_sum, aes(Spread)) + 
+        geom_histogram(binwidth = 2, color = "dodgerblue", fill="white", position="dodge") +
+        geom_vline(aes(xintercept=mean(Spread)),
+                   color="dodgerblue3", linetype="dashed", size=1) +
+        xlab("Point Spread") +
+        ylab("Game Count")
+      
+      print(spread + theme_minimal(base_size = 12))
+    })
+    
+    #Establish and Clean Final DF
+    overall_sum <- colSums(sim_sum)/loop
+    overall_sum <- overall_sum[-1]
+    overall_sum <- type.convert(data.frame(overall_sum))
+    ov_sum <- overall_sum #Keep Data Frame Format in Another Variable
+    
+    overall_sum <- t(overall_sum)
+    
+    #---To Be Worked On
+    # #Render Win Probability Chart - Home Team
+    # output$home_wp <- renderPlot({
+    # home_wp <- ggplot(ov_sum, aes(y = Home.Win, x = ""))+
+    #   coord_flip() + 
+    #   geom_bar(stat = "identity", fill = "slategray1") +
+    #   ylim(0,1) + 
+    #   geom_text(label = scales::percent(test$b), nudge_y = .1)
+    # home_wp + theme_void()
+    # })
+    # 
+    # #Render Win Probability Chart - Away Team
+    # output$away_wp <- renderPlot({
+    # away_wp <- ggplot(ov_sum, aes(y = -Away.Win, x = ""))+
+    #   coord_flip() + 
+    #   geom_bar(stat = "identity", fill = "royalblue4") +
+    #   ylim(-1,0) + 
+    #   geom_text(label = scales::percent(test1$b), nudge_y = -.1)
+    # 
+    # away_wp + theme_void()
+    # })
+    
+    #Render Simulation Scores for Output
+    h_score <- floor(overall_sum[1,1])
+    a_score <- floor(overall_sum[1,2])
+    
+    output$home_score <- renderText({floor(overall_sum[1,1])})
+    output$away_score <- renderText({floor(overall_sum[1,2])})
+    
+    #Render Spread String for Main Display
+    abs_spread <- abs(h_score-a_score)
+    
+    if (h_score >= a_score) {
+      output$home_spread <-renderText({paste0("(-", abs_spread, ")")})
+      output$away_spread <-renderText({paste0("(+", abs_spread, ")")})
+    } else {
+      output$home_spread <-renderText({paste0("(+", abs_spread, ")")})
+      output$away_spread <-renderText({paste0("(-", abs_spread, ")")})
+    }
+    
+    
+    #Create Table with Overall Simulation Stats
+    output$sum <- DT::renderDT({datatable(overall_sum,
+                                          style = 'bootstrap',
+                                          options = list(
+                                            columnDefs = list(list(className = 'dt-center', targets = "_all")),
+                                            paging = FALSE,
+                                            searching = FALSE,
+                                            fixedColumns = TRUE,
+                                            autoWidth = TRUE,
+                                            ordering = TRUE,
+                                            dom = 'tB'),
+                                          rownames = FALSE,
+                                          class = "display") %>%
+        formatPercentage(c("Home.Win", "Away.Win")) %>%
+        formatRound(c("Home", "Away", "Spread"), digits = 0)
+    })
+
     
     
   })
   
   
 }
-
-
   
 # Run the app ----
 shinyApp(ui = ui, server = server)
+
