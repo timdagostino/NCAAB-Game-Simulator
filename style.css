@@ -1,0 +1,13 @@
+
+.shiny-image-output {
+  height: 100% !important;
+  width: 100%;
+}
+
+#home_image {
+  height: 150% !important;
+}
+
+#away_image {
+  height: 150% !important;
+}
