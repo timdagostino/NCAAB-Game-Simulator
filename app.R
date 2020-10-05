@@ -15,6 +15,7 @@ library (shinydashboard)
 library (profvis)
 library (ggplot2)
 library (ggthemes)
+library (colorfindr)
 
 
 #Data
@@ -45,7 +46,7 @@ ui <- fluidPage(
     mainPanel(
       
       tabsetPanel(type = "tabs",
-                  tabPanel("Summary", 
+                  tabPanel("Simulate a Game", 
                            
                            fluidRow(
                              
@@ -85,37 +86,35 @@ ui <- fluidPage(
                                     ),
                                     
                                     fluidRow(
+                                      HTML('<hr style="color: black; border: 2px solid GhostWhite; border-radius: 25px;">'),
+                                      h4(strong("Win Probability (%)")),
                                       
                                       column(1),
                                       
-                                      column(10,
-                                              HTML('<hr style="color: black; border: 2px solid GhostWhite; border-radius: 25px;">')
+                                      column(5, align = "right",
+                                            br(),
+                                            plotOutput("wp_away", height = 40, width = 350)
                                               ),
+                                      
+                                      column(5, align = "left",
+                                             br(),
+                                             plotOutput("wp_home", height = 40, width = 350)
+                                      ),
                                       
                                       column(1)
                                       ),
                                     
                                     fluidRow( 
-                                      column(1),
+                                      column(2),
                                       
-                                      column(4,
+                                      column(8,
                                              fluidRow(
                                                br(),
-                                               h5(strong("Simulated Games - Spread Results")),
+                                               h5(strong("Simulation Spread Results")),
                                                plotOutput("games_spread"))
                                              ),
                                              
                                       column(2),
-                                      
-                                      column(4,
-                                             fluidRow(
-                                               br(),
-                                               #h5(strong("Team Stats Comparison")),
-                                               #plotlyOutput("team_radar"))
-                                             )
-                                             ),
-                                      
-                                      column(1)
                                              
                                       ),
                         
@@ -148,7 +147,19 @@ ui <- fluidPage(
                              DTOutput("team_stats")
                              )
                            )
-                  )
+                  ),
+                  
+                  tabPanel("Upcoming Game Predictions",
+                           
+                           fluidRow(
+                             
+                             column(12)
+                             
+                             )
+                           )
+                  
+                  
+                  
       )
       
       
@@ -301,7 +312,7 @@ server <- function(input, output) {
     }
     
     #Reset Simulation Summary
-    sim_sum <- 0
+    sim_sum <- data.frame()
     
     x <- as.integer(1) #Game Count for Data Frame Entry
     
@@ -604,16 +615,14 @@ server <- function(input, output) {
                     Home.Win = home_team_wins, 
                     Away.Win = away_team_wins)
       
-      sim_sum <- data.frame(rbind(sim_sum, game_sum))
+      sim_sum <- data.frame(rbind(game_sum, sim_sum))
+      names(sim_sum) <- c("Game", "Home", "Away", "Spread", "Home.Win", "Away.Win")
       
       i <- i - 1 #Reduce Loop Count (Total Simulations Left to Run)
       
       progress$inc(1/i, detail = paste("Game Count:", x))
       x <- x + 1
     }
-    
-    
-    sim_sum <- sim_sum[-1,]
     
     games_summary <- sim_sum %>% select(Home:Spread) 
     
@@ -649,32 +658,38 @@ server <- function(input, output) {
     #Establish and Clean Final DF
     overall_sum <- colSums(sim_sum)/loop
     overall_sum <- overall_sum[-1]
-    overall_sum <- type.convert(data.frame(overall_sum))
-    ov_sum <- overall_sum #Keep Data Frame Format in Another Variable
+    overall_sum <- t(type.convert(data.frame(overall_sum)))
     
-    overall_sum <- t(overall_sum)
+    #Render Win Probability Chart Data Frames
+    home_wp_df <- data.frame(team = "Home", wp = overall_sum[4], image = normalizePath(file.path("www",
+                                                                                                    paste0(input$home, ".png"))))
+    away_wp_df <- data.frame(team = "Away", wp = overall_sum[5], image = normalizePath(file.path("www",
+                                                                                                 paste0(input$away, ".png"))))
     
-    #---To Be Worked On
-    # #Render Win Probability Chart - Home Team
-    # output$home_wp <- renderPlot({
-    # home_wp <- ggplot(ov_sum, aes(y = Home.Win, x = ""))+
-    #   coord_flip() + 
-    #   geom_bar(stat = "identity", fill = "slategray1") +
-    #   ylim(0,1) + 
-    #   geom_text(label = scales::percent(test$b), nudge_y = .1)
-    # home_wp + theme_void()
-    # })
-    # 
-    # #Render Win Probability Chart - Away Team
-    # output$away_wp <- renderPlot({
-    # away_wp <- ggplot(ov_sum, aes(y = -Away.Win, x = ""))+
-    #   coord_flip() + 
-    #   geom_bar(stat = "identity", fill = "royalblue4") +
-    #   ylim(-1,0) + 
-    #   geom_text(label = scales::percent(test1$b), nudge_y = -.1)
-    # 
-    # away_wp + theme_void()
-    # })
+    #Render Win Probabilty Chart - Home Team
+    output$wp_home <- renderPlot({
+      wp_home <- ggplot(home_wp_df, aes(team, wp)) +
+        coord_flip() +
+        geom_bar(position = "stack", stat = "identity", fill = get_colors(normalizePath(file.path("www",
+                                                                                                  paste0(input$home, ".png"))), top_n = 1, get_stats = FALSE)) +
+        ylim(0,1) +
+        geom_text(size = 7, label = paste0(home_wp_df[2]*100, "%"), nudge_y = .2)
+      wp_home + theme_void()
+      
+    })
+    
+    #Render Win Probabilty Chart - Away Team
+    output$wp_away <- renderPlot({
+      wp_away <- ggplot(away_wp_df, aes(team, -wp)) +
+        coord_flip() +
+        geom_bar(position = "stack", stat = "identity", fill = get_colors(normalizePath(file.path("www",
+                                                                                                  paste0(input$away, ".png"))), top_n = 1, get_stats = FALSE)) +
+        ylim(-1,0) +
+        geom_text(size = 7, label = paste0(away_wp_df[2]*100, "%"), nudge_y = -.2)
+      wp_away + theme_void()
+    })
+    
+    
     
     #Render Simulation Scores for Output
     h_score <- floor(overall_sum[1,1])
