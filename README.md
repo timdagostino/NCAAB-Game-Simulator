@@ -1,4 +1,4 @@
-The NCAA simulator application contains the following:
+**The NCAA simulator application contains the following:**
 - Game simulator built on an individual posession framework (customizable options available)
 - Simualted Game Stats (for each simulated Game)
 - NCAAA Basketball Team Stats Hub
