@@ -4,9 +4,9 @@ library (shinyBS)
 library (shinythemes)
 library (rvest)
 #library (plotly)
+library (plyr)
 library (dplyr)
 library (rvest)
-library (plyr)
 library (dplyr)
 library (DT)
 library (shinycssloaders)
@@ -16,6 +16,7 @@ library (profvis)
 library (ggplot2)
 library (ggthemes)
 library (colorfindr)
+library (shinyalert)
 
 
 #Data
@@ -24,20 +25,23 @@ source("NCAA_Data_Scraper.R")
 
 # Define UI ----
 ui <- fluidPage(
-  #theme = shinytheme("slate"),
+  theme = shinytheme("flatly"),
   pageWithSidebar(
     headerPanel(title=div(img(src="ncaa.png", height = "10%", width = "10%"),"NCAA Men's Basketball Simulator")),
     sidebarPanel(
       sliderInput("num_games", "Number of Games to Simulate:",
-                  min = 500, max = 10000, value = 5000, step = 500),
+                  min = 500, max = 10000, value = 3500, step = 500),
       selectInput('home', 'Select Home Team', choices = team_name_unique, selected = 'Villanova'),
       selectInput('away', 'Select Away Team', choices = team_name_unique, selected = 'Georgetown'),
-      checkboxInput("checkbox", label = "Adjust for Home Field Advantage", value = FALSE),
-      checkboxInput("checkbox2", label = "Adjust for Strength of Schedule", value = FALSE),
+      #checkboxInput("checkbox_hfa", label = "Adjust for Home Field Advantage", value = FALSE),
+      checkboxInput("checkbox_sos", label = "Adjust for Strength of Schedule", value = FALSE),
+      checkboxInput("checkbox_norm", label = "Normalize Stats (Caution: WIP - Expect Bugs)", value = FALSE),
+      helpText(em("Selecting this normalizes team performance based on a selection of opponent performance metrics.")),
+      br(),
       actionButton("run",label = "Run Simulation"),
       helpText(h3("Instructions:")),
       helpText("Select the approproate HOME and AWAY teams, then hit the Run Simulation button. The simulator uses real game data to simulate every posession for the specified number of games."),
-      helpText("After clicking the Run Simulation button, please allow 60 seconds for the summary and game results to appear (Processing power is limited on the Shiny servers)"),
+      helpText("After clicking the Run Simulation button, please allow 30 seconds for the summary and game results to appear."),
       br(),
       helpText(h5("Created by Tim D'Agostino (2020)")),
       helpText(h5("Contact: timothydagostino16@gmail.com"))
@@ -71,7 +75,13 @@ ui <- fluidPage(
                                       column(2,
                                              br(),
                                              br(),
-                                             h4(strong("@"))
+                                             img(src="vs.png", height = "40%", width = "40%"),
+                                             br(),
+                                             br(),
+                                             br(),
+                                             h4(strong("Over/Under")),
+                                             HTML('<hr style="color: gray;">'),
+                                             h2(strong(textOutput("over_under")))
                                       ),
                                       
                                       column(4, 
@@ -147,16 +157,16 @@ ui <- fluidPage(
                              DTOutput("team_stats")
                              )
                            )
-                  ),
+                  )
                   
-                  tabPanel("Upcoming Game Predictions",
-                           
-                           fluidRow(
-                             
-                             column(12)
-                             
-                             )
-                           )
+                  # tabPanel("Upcoming Game Predictions",
+                  #          
+                  #          fluidRow(
+                  #            
+                  #            column(12)
+                  #            
+                  #            )
+                  #          )
                   
                   
                   
@@ -166,15 +176,34 @@ ui <- fluidPage(
       
     )
     
-  )
+  ),
+  
+  useShinyalert() #Shiny Alert
   
 )
 
 # Define server logic ----
 server <- function(input, output) {
   
+  shinyalert(
+    title = "Insufficient Stats Warning",
+    text = " Please be aware: If you select a team and the simulation fails to run, it is because one of the selected teams has insuffiencit stats to support the simulation model. This issue should resolve itself in the coming weeks.",
+    size = "m", 
+    closeOnEsc = TRUE,
+    closeOnClickOutside = TRUE,
+    html = FALSE,
+    type = "warning",
+    showConfirmButton = TRUE,
+    showCancelButton = FALSE,
+    confirmButtonText = "OK",
+    confirmButtonCol = "#AEDEF4",
+    timer = 0,
+    imageUrl = "",
+    animation = TRUE
+  )
+  
   #Create Table with Team Stats
-  output$team_stats <- DT::renderDT({datatable(ncaa_team_stats_2020,
+  output$team_stats <- DT::renderDT({datatable(ncaa_team_stats_2021,
                                                style = 'bootstrap',
                                                options = list(
                                                  columnDefs = list(list(className = 'dt-center', targets = "_all")),
@@ -198,7 +227,7 @@ server <- function(input, output) {
     filename <- normalizePath(file.path("www",
                               paste0(input$home, ".png")))
     
-    list(src = filename, height = "35%", width = "35%")
+    list(src = filename, height = "100px", width = "100px")
   }, deleteFile = FALSE)
   
   #Render Home Team Name
@@ -212,7 +241,7 @@ server <- function(input, output) {
   #Render Away Team Name
   output$away_name <- renderText({input$away})
     
-    list(src = filename, height = "35%", width = "35%")
+    list(src = filename, height = "100px", width = "100px")
   }, deleteFile = FALSE)
   
   #Begin Simulation Here
@@ -226,11 +255,11 @@ server <- function(input, output) {
     #Start Simulation Here --------------------------------------
     
     #Set Home Team
-    home_team <- ncaa_team_stats_2020 %>%
+    home_team <- ncaa_team_stats_2021 %>%
       filter(team_name == input$home)
     
     #Set Away Team
-    away_team <- ncaa_team_stats_2020 %>%
+    away_team <- ncaa_team_stats_2021 %>%
       filter(team_name == input$away)
     
     #Set Adjustment
@@ -266,15 +295,14 @@ server <- function(input, output) {
     #Establish Home Field Advantage
     home_win_pct <- home_team$home_wins/(home_team$home_wins + home_team$home_losses)
     
-    if (input$checkbox == TRUE) {
-      
-      home_adv <- home_win_pct/20
-    } else {
-      home_adv <- 0
-    }
+    home_adv <- 0
     
-    if (input$checkbox2 == TRUE) {
-      
+    # if (input$checkbox_hfa == TRUE) {
+    #      
+    #  home_adv <- as.double(home_win_pct*.10)
+    # } 
+    
+    if (input$checkbox_sos == TRUE) {
       
       #Create Adjustment Functions
       home_stat_adjust <- function(stat) {
@@ -311,6 +339,25 @@ server <- function(input, output) {
       
     }
     
+    #Normalize Stats/Non Normalized Stats
+    if (input$checkbox_norm == TRUE) {
+      
+      #Home Team
+      home_team$fg_pct <- mean(c(home_team$fg_pct, away_team$opp_fg_pct))
+      home_team$three_pct <- mean(c(home_team$three_pct, away_team$opp_three_pct))
+      home_team$block_pct <- mean(c(home_team$block_pct, away_team$opp_block_pct))
+      home_team$orb_pct <- mean(c(home_team$orb_pct, away_team$opp_orb_pct))
+      home_team$tov_pct <- mean(c(home_team$tov_pct, away_team$opp_tov_pct))
+      
+      #Away Team
+      away_team$fg_pct <- mean(c(away_team$fg_pct, home_team$opp_fg_pct))
+      away_team$three_pct <- mean(c(away_team$three_pct, home_team$opp_three_pct))
+      away_team$block_pct <- mean(c(away_team$block_pct, home_team$opp_block_pct))
+      away_team$orb_pct <- mean(c(away_team$orb_pct, home_team$opp_orb_pct))
+      away_team$tov_pct <- mean(c(away_team$tov_pct, home_team$opp_tov_pct))
+    }
+    
+    
     #Reset Simulation Summary
     sim_sum <- data.frame()
     
@@ -318,11 +365,12 @@ server <- function(input, output) {
     
     #Establish Max Shot Clock
     sc_max <- 30
-    sc_min <- 10
+    sc_min <- 4
     
-    #Percentage of Shots, Field Goals and Three Pointers
+    #Percentage of Field Goals and Three Pointers
     home_team_pct_fg <- home_team$fg_count / (home_team$fg_count + home_team$three_count)
     home_team_pct_th <- home_team$three_count / (home_team$fg_count + home_team$three_count)
+    
     away_team_pct_fg <- away_team$fg_count / (away_team$fg_count + away_team$three_count)
     away_team_pct_th <- away_team$three_count / (away_team$fg_count + away_team$three_count)
     
@@ -525,7 +573,7 @@ server <- function(input, output) {
             } else { #Shot Type - Three Point
               shot_type <- 3 #Three Point Shot
               
-              if (runif(1) <= away_team$fg_pct) { #Testing if Shot is Made
+              if (runif(1) <= away_team$three_pct) { #Testing if Shot is Made
                 away_team_score <- away_team_score + 3 #Shot is Made
                 
                 #Calculating Time of Posession
@@ -580,12 +628,12 @@ server <- function(input, output) {
       #Add in Free Throws
       
       #Home Team
-      home_team_ft_att <- home_team_fg_att*home_team$ft_pct #FT Attempted
-      home_team_ft_points <- home_team_ft_att*home_team$ft_pct #FT Made
+      home_team_ft_att <- round(home_team_fg_att*home_team$ftr, digits = 0) #FT Attempted
+      home_team_ft_points <- round(home_team_ft_att*home_team$ft_pct, digits = 0) #FT Made
       
       #Away Team
-      away_team_ft_att <- away_team_fg_att*away_team$ft_pct #FT Attempted
-      away_team_ft_points <- away_team_ft_att*away_team$ft_pct #FT Made
+      away_team_ft_att <- round(away_team_fg_att*away_team$ftr, digits = 0) #FT Attempted
+      away_team_ft_points <- round(away_team_ft_att*away_team$ft_pct, digits = 0) #FT Made
       
       #Add to total score & Convert to type Int
       home_team_score <- as.integer(home_team_score + home_team_ft_points)
@@ -672,8 +720,10 @@ server <- function(input, output) {
         coord_flip() +
         geom_bar(position = "stack", stat = "identity", fill = get_colors(normalizePath(file.path("www",
                                                                                                   paste0(input$home, ".png"))), top_n = 1, get_stats = FALSE)) +
-        ylim(0,1) +
-        geom_text(size = 7, label = paste0(home_wp_df[2]*100, "%"), nudge_y = .2)
+        ylim(0,1.2) +
+        geom_hline(yintercept=1, size = 2, color = "lightgray") +
+        geom_hline(yintercept=0, size = 2, color = "black") +
+        geom_text(size = 7, label = paste0(round(home_wp_df[2]*100, digits = 1), "%"), nudge_y = .2)
       wp_home + theme_void()
       
     })
@@ -684,8 +734,10 @@ server <- function(input, output) {
         coord_flip() +
         geom_bar(position = "stack", stat = "identity", fill = get_colors(normalizePath(file.path("www",
                                                                                                   paste0(input$away, ".png"))), top_n = 1, get_stats = FALSE)) +
-        ylim(-1,0) +
-        geom_text(size = 7, label = paste0(away_wp_df[2]*100, "%"), nudge_y = -.2)
+        ylim(-1.2,0) +
+        geom_hline(yintercept=-1, size = 2, color = "lightgray") +
+        geom_hline(yintercept=0, size = 2, color = "black") +
+        geom_text(size = 7, label = paste0(round(away_wp_df[2]*100, digits = 1), "%"), nudge_y = -.2)
       wp_away + theme_void()
     })
     
@@ -697,6 +749,9 @@ server <- function(input, output) {
     
     output$home_score <- renderText({floor(overall_sum[1,1])})
     output$away_score <- renderText({floor(overall_sum[1,2])})
+    
+    #Calculate Over/Under
+    output$over_under <- renderText({floor(overall_sum[1,1]) + floor(overall_sum[1,2])})
     
     #Render Spread String for Main Display
     abs_spread <- abs(h_score-a_score)
