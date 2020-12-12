@@ -1,7 +1,7 @@
 library (rvest)
 
 #Insert URL ------
-URL <- 'https://www.sports-reference.com/cbb/seasons/2020-school-stats.html'
+URL <- 'https://www.sports-reference.com/cbb/seasons/2021-school-stats.html'
 
 #Read the HTML code from the website ------
 
@@ -173,7 +173,7 @@ pf <- as.numeric(pf)
 #Advanced Team Stats ------------------------------
 
 #Insert URL
-URL <- 'https://www.sports-reference.com/cbb/seasons/2020-advanced-school-stats.html'
+URL <- 'https://www.sports-reference.com/cbb/seasons/2021-advanced-school-stats.html'
 
 #Read the HTML code from the website
 
@@ -229,9 +229,55 @@ orb_pct <- html_text(orb_pct_html)
 orb_pct <- as.numeric(orb_pct)
 orb_pct <- (orb_pct/100)
 
+#Basic Opponent Stats ------------------------------
+
+#Insert URL
+URL <- 'https://www.sports-reference.com/cbb/seasons/2021-opponent-stats.html'
+
+#Read the HTML code from the website
+
+webpage_adv <- read_html(URL)
+
+#Opp. Field Goals
+opp_fg_pct_html <- html_nodes(webpage_adv, '.right:nth-child(25)')
+opp_fg_pct <- html_text(opp_fg_pct_html)
+opp_fg_pct <- as.numeric(opp_fg_pct)
+
+#Opp. Three Point Percentage
+opp_three_pct_html <- html_nodes(webpage_adv, '.right:nth-child(28)')
+opp_three_pct <- html_text(opp_three_pct_html)
+opp_three_pct <- as.numeric(opp_three_pct)
+
+#Advanced Opponent Stats ------------------------------
+
+#Insert URL
+URL <- 'https://www.sports-reference.com/cbb/seasons/2021-advanced-opponent-stats.html'
+
+#Read the HTML code from the website
+
+webpage_adv <- read_html(URL)
+
+#Opp. Block Percentage
+opp_block_pct_html <- html_nodes(webpage_adv, '.right:nth-child(30)')
+opp_block_pct <- html_text(opp_block_pct_html)
+opp_block_pct <- as.numeric(opp_block_pct)
+opp_block_pct <- (opp_block_pct/100)
+
+#Opp. Turnover Percentage
+opp_tov_pct_html <- html_nodes(webpage_adv, '.right:nth-child(32)')
+opp_tov_pct <- html_text(opp_tov_pct_html)
+opp_tov_pct <- as.numeric(opp_tov_pct)
+opp_tov_pct <- (opp_tov_pct/100)
+
+#Opp. Offensive Rebound Percentage
+opp_orb_pct_html <- html_nodes(webpage_adv, '.right:nth-child(33)')
+opp_orb_pct <- html_text(opp_orb_pct_html)
+opp_orb_pct <- as.numeric(opp_orb_pct)
+opp_orb_pct <- (opp_orb_pct/100)
+
 
 #Create Dataframe
-ncaa_team_stats_2020 <- data.frame(team_name, rank, overall_games, 
+ncaa_team_stats_2021 <- data.frame(team_name, rank, overall_games, 
                                    overall_wins, overall_losses, wp,
                                    srs, sos, conf_wins, 
                                    conf_losses, home_wins, home_losses,
@@ -244,14 +290,15 @@ ncaa_team_stats_2020 <- data.frame(team_name, rank, overall_games,
                                    tov, pf, pace,
                                    ortg, ts_pct, trb_pct,
                                    steal_pct, block_pct, tov_pct,
-                                   orb_pct)
+                                   orb_pct, opp_fg_pct, opp_three_pct, 
+                                   opp_block_pct, opp_tov_pct, opp_orb_pct)
 
 
 
-team_name_unique <- sort(unique(ncaa_team_stats_2020$team_name))
+team_name_unique <- sort(unique(ncaa_team_stats_2021$team_name))
 
 #Establish Bins
-sos_bins <- cut(ncaa_team_stats_2020$sos, 7, include.lowest=TRUE, 
+sos_bins <- cut(ncaa_team_stats_2021$sos, 7, include.lowest=TRUE, 
                 labels=c("Very Weak", "Weak", "Moderately Weak", "Average", "Moderately Strong", "Strong", "Very Strong"))
 
-ncaa_team_stats_2020 <- cbind(ncaa_team_stats_2020,sos_bins)
+ncaa_team_stats_2021 <- cbind(ncaa_team_stats_2021,sos_bins)
