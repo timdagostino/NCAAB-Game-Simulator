@@ -1,0 +1,17 @@
+{
+  "name": "heroku-docker-r-shiny-app",
+  "stack": "container",
+  "description": "This is an example Shiny application, which uses heroku-docker-r for Heroku.",
+  "keywords": [
+    "r",
+    "shiny"
+  ],
+  "repository": "https://github.com/virtualstaticvoid/heroku-docker-r-shiny-app",
+  "logo": "https://github.com/virtualstaticvoid/heroku-docker-r-shiny-app/raw/master/logo.png",
+  "success_url": "/",
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  }
+}
