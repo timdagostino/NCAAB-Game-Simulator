@@ -18,7 +18,8 @@ steps:
 - name: Build image
 run: docker build -t main .
 # run the docker image supply the secrets from the github secrets store.
-- name: execute
+- name: execute .
+#run
 run: >
 docker run
 -e SHINY_ACC_NAME=${{ secrets.SHINY_ACC_NAME }}
