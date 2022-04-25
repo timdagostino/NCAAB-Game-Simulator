@@ -1,6 +1,8 @@
 library(shiny)
 install.packages("shinyBS")
+install.packages("shinythemes")
 library(shinyBS)
+library(shinythemes)
 port <- Sys.getenv('PORT')
 shiny::runApp(
   appDir = getwd(),
