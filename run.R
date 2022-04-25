@@ -1,5 +1,8 @@
 library(shiny)
 install.packages("shinyBS")
+install.packages("rvest")
+library(rvest)
+
 install.packages("shinythemes")
 library(shinyBS)
 library(shinythemes)
