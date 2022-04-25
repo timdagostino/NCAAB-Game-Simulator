@@ -1,7 +1,7 @@
 library (rvest)
 
 #Insert URL ------
-URL <- 'https://www.sports-reference.com/cbb/seasons/2021-school-stats.html'
+URL <- 'https://www.sports-reference.com/cbb/seasons/2022-school-stats.html'
 
 #Read the HTML code from the website ------
 
@@ -173,7 +173,7 @@ pf <- as.numeric(pf)
 #Advanced Team Stats ------------------------------
 
 #Insert URL
-URL <- 'https://www.sports-reference.com/cbb/seasons/2021-advanced-school-stats.html'
+URL <- 'https://www.sports-reference.com/cbb/seasons/2022-advanced-school-stats.html'
 
 #Read the HTML code from the website
 
