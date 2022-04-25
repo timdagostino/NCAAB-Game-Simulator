@@ -1,15 +1,6 @@
 # R Shiny Dashboard for NCAA Simulator
 library (shiny)
-install.packages("plyr")
-install.packages("dplyr")
-install.packages("shinycustomloader")
-install.packages("DT")
-install.packages("shinycssloaders")
-install.packages("profvis")
-install.packages("ggplot2")
-install.packages("ggthemes")
-install.packages("colorfindr")
-install.packages("shinyalert")
+
 library (shinyBS)
 library (shinythemes)
 library (rvest)
